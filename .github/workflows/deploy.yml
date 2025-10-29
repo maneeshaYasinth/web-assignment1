@@ -1,0 +1,53 @@
+name: Deploy Website to GitHub Pages
+
+on:
+  # Run on pushes to the 'main' branch
+  push:
+    branches: [ main ]
+  # Also run on Pull Requests targeting 'main'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # This job just packages your website files
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # '.' means the entire repository root folder
+          # This is where your index.html is
+          path: '.' 
+
+  # This job does the actual deployment
+  deploy:
+    # It needs the 'build' job to finish first
+    needs: build
+    
+    # Grant permissions for the deploy action to work
+    permissions:
+      pages: write
+      id-token: write
+      
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    runs-on: ubuntu-latest
+    
+    # This is the key! ONLY run this job if we are
+    # on the 'main' branch (i.e., after a merge)
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
